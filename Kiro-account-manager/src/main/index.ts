@@ -715,6 +715,86 @@ app.whenReady().then(() => {
     autoUpdater.quitAndInstall(false, true)
   })
 
+  // IPC: 手动检查更新（使用 GitHub API，用于 AboutPage）
+  const GITHUB_REPO = 'chaogei/Kiro-account-manager'
+  const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`
+  
+  ipcMain.handle('check-for-updates-manual', async () => {
+    try {
+      console.log('[Update] Manual check via GitHub API...')
+      const currentVersion = app.getVersion()
+      
+      const response = await fetch(GITHUB_API_URL, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'Kiro-Account-Manager'
+        }
+      })
+      
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('GitHub API 请求次数超限，请稍后再试')
+        } else if (response.status === 404) {
+          throw new Error('未找到发布版本')
+        }
+        throw new Error(`GitHub API 错误: ${response.status}`)
+      }
+      
+      const release = await response.json() as {
+        tag_name: string
+        name: string
+        body: string
+        html_url: string
+        published_at: string
+        assets: Array<{
+          name: string
+          browser_download_url: string
+          size: number
+        }>
+      }
+      
+      const latestVersion = release.tag_name.replace(/^v/, '')
+      
+      // 比较版本号
+      const compareVersions = (v1: string, v2: string): number => {
+        const parts1 = v1.split('.').map(Number)
+        const parts2 = v2.split('.').map(Number)
+        for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+          const p1 = parts1[i] || 0
+          const p2 = parts2[i] || 0
+          if (p1 > p2) return 1
+          if (p1 < p2) return -1
+        }
+        return 0
+      }
+      
+      const hasUpdate = compareVersions(latestVersion, currentVersion) > 0
+      
+      console.log(`[Update] Current: ${currentVersion}, Latest: ${latestVersion}, HasUpdate: ${hasUpdate}`)
+      
+      return {
+        hasUpdate,
+        currentVersion,
+        latestVersion,
+        releaseNotes: release.body || '',
+        releaseName: release.name || `v${latestVersion}`,
+        releaseUrl: release.html_url,
+        publishedAt: release.published_at,
+        assets: release.assets.map(a => ({
+          name: a.name,
+          downloadUrl: a.browser_download_url,
+          size: a.size
+        }))
+      }
+    } catch (error) {
+      console.error('[Update] Manual check failed:', error)
+      return {
+        hasUpdate: false,
+        error: error instanceof Error ? error.message : '检查更新失败'
+      }
+    }
+  })
+
   // IPC: 加载账号数据
   ipcMain.handle('load-accounts', async () => {
     try {

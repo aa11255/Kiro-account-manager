@@ -41,7 +41,7 @@ export function AboutPage() {
   const checkForUpdates = async (showModal = true) => {
     setIsCheckingUpdate(true)
     try {
-      const result = await window.api.checkForUpdates()
+      const result = await window.api.checkForUpdatesManual()
       setUpdateInfo(result)
       if (showModal || result.hasUpdate) {
         setShowUpdateModal(true)
@@ -55,7 +55,7 @@ export function AboutPage() {
 
   const openReleasePage = () => {
     if (updateInfo?.releaseUrl) {
-      window.api.openReleasePage(updateInfo.releaseUrl)
+      window.api.openExternal(updateInfo.releaseUrl)
     }
   }
 

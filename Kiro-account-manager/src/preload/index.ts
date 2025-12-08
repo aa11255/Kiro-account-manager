@@ -283,7 +283,7 @@ const api = {
 
   // ============ 自动更新 ============
   
-  // 检查更新
+  // 检查更新 (electron-updater)
   checkForUpdates: (): Promise<{
     hasUpdate: boolean
     version?: string
@@ -292,6 +292,25 @@ const api = {
     error?: string
   }> => {
     return ipcRenderer.invoke('check-for-updates')
+  },
+
+  // 手动检查更新 (GitHub API, 用于 AboutPage)
+  checkForUpdatesManual: (): Promise<{
+    hasUpdate: boolean
+    currentVersion?: string
+    latestVersion?: string
+    releaseNotes?: string
+    releaseName?: string
+    releaseUrl?: string
+    publishedAt?: string
+    assets?: Array<{
+      name: string
+      downloadUrl: string
+      size: number
+    }>
+    error?: string
+  }> => {
+    return ipcRenderer.invoke('check-for-updates-manual')
   },
 
   // 下载更新
