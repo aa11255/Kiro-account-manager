@@ -324,7 +324,7 @@ export function AboutPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary mt-0.5">✓</span>
-              <strong>主题定制</strong>：13 种主题颜色，深色/浅色模式
+              <strong>主题定制</strong>：21 种主题颜色，深色/浅色模式
             </li>
           </ul>
         </CardContent>
